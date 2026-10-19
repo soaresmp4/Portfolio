@@ -138,6 +138,8 @@ dialog::backdrop{background:rgba(20,35,63,.55);backdrop-filter:blur(calc(12*var(
 .pl{z-index:2}
 .card img,.gv img{transform:scale(1.04)}
 .card,.gv{isolation:isolate;-webkit-mask-image:-webkit-radial-gradient(white,black);backface-visibility:hidden}
+.ytl{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2;color:#fff;background:rgba(255,255,255,.18);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:calc(10*var(--u)) calc(18*var(--u));border-radius:980px;font-size:calc(15*var(--u))}
+.ytl[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -175,7 +177,7 @@ dialog::backdrop{background:rgba(20,35,63,.55);backdrop-filter:blur(calc(12*var(
     <h2 class="serif c bu">Como funciona</h2>
     <div class="steps">
       <div class="step bu"><em>1</em><b>Você envia</b>O material bruto pelo Google Drive.</div>
-      <div class="step bu" style="--d:.1s"><em>2</em><b>Eu edito</b>Cuido de todo o processo, do primeiro corte a finalização.</div>
+      <div class="step bu" style="--d:.1s"><em>2</em><b>Eu edito</b>Cuido de todo o processo, do primeiro corte ao acabamento.</div>
       <div class="step bu" style="--d:.2s"><em>3</em><b>Você aprova</b>Peça os ajustes que precisar, até 3 por vídeo.</div>
     </div>
   </div>
@@ -201,7 +203,7 @@ dialog::backdrop{background:rgba(20,35,63,.55);backdrop-filter:blur(calc(12*var(
 
 <div class="fix" id="fix"><button class="cta" data-quote>Pedir orçamento <i>→</i></button></div>
 
-<dialog id="modal" aria-label="Player"><div class="mbox"><video id="player" controls playsinline hidden></video><iframe id="yt" hidden title="Vídeo" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div><button class="x" data-close aria-label="Fechar">×</button></dialog>
+<dialog id="modal" aria-label="Player"><div class="mbox"><video id="player" controls playsinline hidden></video><iframe id="yt" hidden title="Vídeo" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div><a id="ytl" class="ytl" target="_blank" rel="noopener" hidden>Abrir no YouTube ›</a><button class="x" data-close aria-label="Fechar">×</button></dialog>
 <dialog id="quote" aria-label="Pedir orçamento"><div class="mbox"><form class="panel" id="qf">
   <h3>Pedir orçamento</h3><p>Responda rápido e eu continuo no WhatsApp.</p>
   <label class="t" for="nm">Seu nome</label><input type="text" id="nm" placeholder="Como posso te chamar?" autocomplete="given-name">
@@ -256,10 +258,12 @@ const media=v=>v.id?'<img alt="" src="https://i.ytimg.com/vi/'+v.id+'/maxresdefa
  :v.src?'<video src="'+v.src+'#t=0.5" muted loop playsinline preload="metadata"'+(v.poster?' poster="'+v.poster+'"':'')+'></video>'
  :v.poster?'<img alt="" src="'+v.poster+'">':'<div class="ph">Seu vídeo aqui</div>';
 const fan=$("fan"),wheel=$("wheel"),modal=$("modal"),player=$("player"),yt=$("yt");
+const ytl=$("ytl");
 const openV=v=>{if(!v.ok)return;
+  ytl.hidden=true;
   if(v.src){yt.hidden=true;player.hidden=false;player.muted=false;player.src=v.src;player.play().catch(()=>{})}
-  else if(AO_VIVO_YOUTUBE&&!v.bad){player.hidden=true;yt.hidden=false;yt.src="https://www.youtube.com/embed/"+v.id+"?autoplay=1&rel=0&playsinline=1"}
-  else{window.open("https://www.youtube.com/shorts/"+v.id,"_blank","noopener");return}
+  else{player.hidden=true;yt.hidden=false;yt.src="https://www.youtube.com/embed/"+v.id+"?autoplay=1&rel=0&playsinline=1";
+    if(v.noembed){ytl.href="https://www.youtube.com/shorts/"+v.id;ytl.hidden=false}}
   modal.showModal();refresh()};
 
 const mk=c=>{const b=document.createElement("div");b.className=c;b.setAttribute("role","button");b.tabIndex=0;b.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();b.click()}});return b};
@@ -278,7 +282,8 @@ function live(el,v,on){
     if(!on){killP(el);return}
     if(el._p||el._busy)return;
     el._busy=true;
-    ytReady(()=>{
+    const wait=Math.max(0,(live.next||0)-performance.now());live.next=Math.max(live.next||0,performance.now())+150;
+    setTimeout(()=>ytReady(()=>{
       el._busy=false;if(!el._want||el._p)return;
       const d=document.createElement("div");el.appendChild(d);
       const pv={autoplay:1,mute:1,controls:0,loop:1,playlist:v.id,playsinline:1,modestbranding:1,rel:0,disablekb:1,iv_load_policy:3,fs:0};
@@ -286,8 +291,8 @@ function live(el,v,on){
       el._p=new YT.Player(d,{width:"100%",height:"100%",videoId:v.id,playerVars:pv,events:{
         onReady:e=>{e.target.mute();e.target.playVideo();const f=e.target.getIframe();f.tabIndex=-1;f.setAttribute("aria-hidden","true")},
         onStateChange:e=>{if(e.data===1){const f=e.target.getIframe();if(f)f.classList.add("on")}},
-        onError:()=>{v.bad=true;killP(el)}}});
-    });
+        onError:e=>{killP(el);if(e.data===100||e.data===101||e.data===150){v.bad=true;v.noembed=e.data!==100}else if((el._rt=(el._rt||0)+1)<=3)setTimeout(()=>{if(el._want)live(el,v,true)},1200*el._rt)}}});
+    }),wait);
   }else{const vid=el.querySelector("video");if(vid){if(on){vid.muted=true;vid.playsInline=true;const p=vid.play();if(p&&p.catch)p.catch(()=>vid.addEventListener("canplay",()=>vid.play().catch(()=>{}),{once:true}))}else vid.pause()}}
 }
 const MOB=matchMedia("(max-width:700px)").matches,MAXG=MOB?6:12,vis=new Set();
