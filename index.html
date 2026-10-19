@@ -221,7 +221,21 @@ const WHATSAPP="5585992937643", INSTAGRAM="soars.mp4", PHOTO="data:image/webp;ba
    Ex: {yt:"https://youtube.com/shorts/AbCdEfGhIjK"}  ou  {yt:"AbCdEfGhIjK"}
    Para um arquivo seu, use src:"videos/reel1.mp4" (e poster:"capa.jpg", opcional). Ideal: 8 a 12 vídeos. */
 const AO_VIVO_YOUTUBE=true; // true = os Shorts tocam sozinhos nos cards; se o YouTube recusar algum vídeo, o card mostra só a capa
+// Estes são os vídeos que já funcionavam no seu site antigo (liberados para incorporar).
 const VIDEOS=[
+ {yt:"https://youtube.com/shorts/jsEm9AZRRhs"},
+ {yt:"https://youtube.com/shorts/cp8r_tPNgeY"},
+ {yt:"https://youtube.com/shorts/AFnxL60cG9s"},
+ {yt:"https://youtube.com/shorts/vM2_BVaz-Zc"},
+ {yt:"https://youtube.com/shorts/67a3htcinsc"},
+ {yt:"https://youtube.com/shorts/97piPgYTks8"},
+ {yt:"https://youtube.com/shorts/rAW2I_gUWqc"},
+ {yt:"https://youtube.com/shorts/ffyBNp4xcZw"},
+ {yt:"https://youtube.com/shorts/Y1qHsIikmz4"},
+ {yt:"https://youtube.com/shorts/tmaxUmgSRE4"},
+ {yt:"https://youtube.com/shorts/6nvRzHi8W4c"}
+];
+/* Shorts novos (só ative quando estiverem públicos e com incorporação permitida; copie as linhas para dentro da lista acima):
  {yt:"https://youtube.com/shorts/Gym4KAbbyI4"},
  {yt:"https://youtube.com/shorts/8MNEJi6kgvU"},
  {yt:"https://youtube.com/shorts/9uOGsmfZ4qY"},
@@ -230,8 +244,8 @@ const VIDEOS=[
  {yt:"https://youtube.com/shorts/1Z7kc05r-vM"},
  {yt:"https://youtube.com/shorts/VxkS4Hxzuoo"},
  {yt:"https://youtube.com/shorts/WU4xjaEs_gI"},
- {yt:"https://youtube.com/shorts/6vGE-klX1mA"}
-];
+ {yt:"https://youtube.com/shorts/6vGE-klX1mA"},
+*/
 /* ======================== */
 const $=id=>document.getElementById(id),calm=matchMedia("(prefers-reduced-motion: reduce)").matches;
 $("ig").href="https://instagram.com/"+INSTAGRAM;
@@ -245,7 +259,7 @@ document.querySelectorAll(".bu").forEach(e=>io.observe(e));
 const ytId=x=>{if(!x)return"";const m=String(x).match(/(?:shorts\/|v=|youtu\.be\/|embed\/)([\w-]{11})/);return m?m[1]:/^[\w-]{11}$/.test(x)?x:""};
 VIDEOS.forEach((v,i)=>{v.id=v.src?"":ytId(v.yt);v.ok=!!(v.id||v.src);v.title=v.title||"Vídeo "+(i+1)});
 window.fb=i=>{const f=i.dataset.f;if(f){i.dataset.f="";i.src=f}};
-const media=v=>v.id?'<img alt="" loading="lazy" src="https://i.ytimg.com/vi/'+v.id+'/maxresdefault.jpg" data-f="https://i.ytimg.com/vi/'+v.id+'/hqdefault.jpg" onload="if(this.naturalWidth<=120)fb(this)" onerror="fb(this)">'
+const media=v=>v.id?'<img alt="" src="https://i.ytimg.com/vi/'+v.id+'/maxresdefault.jpg" data-f="https://i.ytimg.com/vi/'+v.id+'/hqdefault.jpg" onload="if(this.naturalWidth<=120)fb(this)" onerror="fb(this)">'
  :v.src?'<video src="'+v.src+'#t=0.5" muted loop playsinline preload="metadata"'+(v.poster?' poster="'+v.poster+'"':'')+'></video>'
  :v.poster?'<img alt="" src="'+v.poster+'">':'<div class="ph">Seu vídeo aqui</div>';
 const fan=$("fan"),wheel=$("wheel"),modal=$("modal"),player=$("player"),yt=$("yt");
