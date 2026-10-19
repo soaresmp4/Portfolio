@@ -6,6 +6,7 @@
 <title>soars.mp4 — Edição de vídeo para reels e anúncios</title>
 <meta name="description" content="Edição de reels e anúncios com legendas dinâmicas e b-roll.">
 <meta property="og:title" content="soars.mp4 — Edição de vídeo"><meta property="og:description" content="Reels e anúncios com legendas dinâmicas e b-roll.">
+<link rel="preconnect" href="https://www.youtube.com"><link rel="preconnect" href="https://i.ytimg.com">
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{--u:clamp(1px,.06vw,3px);--bg:#fff;--soft:#f4f5f8;--ink:#14233f;--mut:#5b6780;--line:#e1e4ec;--serif:"Instrument Serif","Times New Roman",serif;--sans:"Inter Tight",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;--ease:cubic-bezier(.2,.7,.2,1);--cw:clamp(calc(176*var(--u)),28vw,calc(300*var(--u)));--ch:calc(var(--cw)*1.7778)}
@@ -221,21 +222,8 @@ const WHATSAPP="5585992937643", INSTAGRAM="soars.mp4", PHOTO="data:image/webp;ba
    Ex: {yt:"https://youtube.com/shorts/AbCdEfGhIjK"}  ou  {yt:"AbCdEfGhIjK"}
    Para um arquivo seu, use src:"videos/reel1.mp4" (e poster:"capa.jpg", opcional). Ideal: 8 a 12 vídeos. */
 const AO_VIVO_YOUTUBE=true; // true = os Shorts tocam sozinhos nos cards; se o YouTube recusar algum vídeo, o card mostra só a capa
-// Estes são os vídeos que já funcionavam no seu site antigo (liberados para incorporar).
+// Ordem = a ordem em que você mandou. Se algum card ficar cinza no site, esse vídeo não está público/liberado para incorporar no YouTube.
 const VIDEOS=[
- {yt:"https://youtube.com/shorts/jsEm9AZRRhs"},
- {yt:"https://youtube.com/shorts/cp8r_tPNgeY"},
- {yt:"https://youtube.com/shorts/AFnxL60cG9s"},
- {yt:"https://youtube.com/shorts/vM2_BVaz-Zc"},
- {yt:"https://youtube.com/shorts/67a3htcinsc"},
- {yt:"https://youtube.com/shorts/97piPgYTks8"},
- {yt:"https://youtube.com/shorts/rAW2I_gUWqc"},
- {yt:"https://youtube.com/shorts/ffyBNp4xcZw"},
- {yt:"https://youtube.com/shorts/Y1qHsIikmz4"},
- {yt:"https://youtube.com/shorts/tmaxUmgSRE4"},
- {yt:"https://youtube.com/shorts/6nvRzHi8W4c"}
-];
-/* Shorts novos (só ative quando estiverem públicos e com incorporação permitida; copie as linhas para dentro da lista acima):
  {yt:"https://youtube.com/shorts/Gym4KAbbyI4"},
  {yt:"https://youtube.com/shorts/8MNEJi6kgvU"},
  {yt:"https://youtube.com/shorts/9uOGsmfZ4qY"},
@@ -245,7 +233,10 @@ const VIDEOS=[
  {yt:"https://youtube.com/shorts/VxkS4Hxzuoo"},
  {yt:"https://youtube.com/shorts/WU4xjaEs_gI"},
  {yt:"https://youtube.com/shorts/6vGE-klX1mA"},
-*/
+ {yt:"https://youtube.com/shorts/0JwQFiq67s4"},
+ {yt:"https://youtube.com/shorts/TJDi5S4_F5k"},
+ {yt:"https://youtube.com/shorts/D8CIBXXV_bs"}
+];
 /* ======================== */
 const $=id=>document.getElementById(id),calm=matchMedia("(prefers-reduced-motion: reduce)").matches;
 $("ig").href="https://instagram.com/"+INSTAGRAM;
@@ -297,7 +288,8 @@ function live(el,v,on){
     });
   }else{const vid=el.querySelector("video");if(vid){if(on){vid.muted=true;vid.playsInline=true;const p=vid.play();if(p&&p.catch)p.catch(()=>vid.addEventListener("canplay",()=>vid.play().catch(()=>{}),{once:true}))}else vid.pause()}}
 }
-const MAXG=matchMedia("(max-width:700px)").matches?4:6,vis=new Set();
+const MOB=matchMedia("(max-width:700px)").matches,MAXG=MOB?6:12,vis=new Set();
+if(AO_VIVO_YOUTUBE)ytReady(()=>{});
 const gio=new IntersectionObserver(es=>{es.forEach(e=>e.intersectionRatio>=.5?vis.add(e.target):vis.delete(e.target));refresh()},{threshold:[0,.5]});
 function refresh(){
   const mid=innerHeight/2,d=el=>{const r=el.getBoundingClientRect();return Math.abs(r.top+r.height/2-mid)};
@@ -325,7 +317,7 @@ const cards=items.map((v,i)=>{
 });
 let goal=0,theta=0,drag=false,moved=0,x0=0,idle=0,seen=true,R=600;const t0=performance.now();
 const measure=()=>R=cards[0].offsetWidth*3.3;measure();addEventListener("resize",measure);
-new IntersectionObserver(e=>seen=e[0].isIntersecting).observe(fan);
+new IntersectionObserver(e=>{seen=e[0].isIntersecting;if(!seen)cards.forEach(c=>{if(c._on){c._on=false;live(c,c._v,false)}})}).observe(fan);
 fan.addEventListener("pointerdown",e=>{drag=true;moved=0;x0=e.clientX;fan.classList.add("drag")});
 addEventListener("pointermove",e=>{if(!drag)return;const dx=e.clientX-x0;x0=e.clientX;moved+=Math.abs(dx);goal+=dx*.16});
 const up=()=>{if(!drag)return;drag=false;fan.classList.remove("drag");idle=performance.now()};
@@ -339,7 +331,7 @@ function frame(now){
     const a=((i*STEP+theta)%SPAN+SPAN*1.5)%SPAN-SPAN/2+(1-e)*75,aa=Math.abs(a),r=a*Math.PI/180,s=1+.08*Math.max(0,1-aa/(STEP*1.6));
     c.style.transform="translate3d("+(R*Math.sin(r)).toFixed(1)+"px,"+(R*(1-Math.cos(r))).toFixed(1)+"px,0) rotate("+a.toFixed(2)+"deg) scale("+s.toFixed(3)+")";
     c.style.opacity=Math.min(1,e*3);c.style.zIndex=Math.round(2000+a*10);
-    const lim=c._v.id?STEP*.5:STEP*2.2,want=!eco&&!modal.open&&k>=(c._v.id?1:.1)&&(c._on?aa<lim+STEP*.4:aa<lim);if(want!==!!c._on){c._on=want;live(c,c._v,want)}
+    const lim=c._v.id?STEP*(MOB?2.2:3.2):STEP*2.2,want=!eco&&!modal.open&&k>=.1&&(c._on?aa<lim+STEP*.4:aa<lim);if(want!==!!c._on){c._on=want;live(c,c._v,want)}
   });
 }
 requestAnimationFrame(frame);
